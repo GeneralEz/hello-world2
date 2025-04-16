@@ -31,3 +31,37 @@ SELECT GameName, AVG(SessionDuration) AS AvgSessionTime
 FROM GameSessions
 GROUP BY GameName;
 
+CREATE FUNCTION dbo.GetFirstName (@FullName NVARCHAR(100))
+RETURNS NVARCHAR(50)
+AS
+BEGIN
+    RETURN LEFT(@FullName, CHARINDEX(' ', @FullName + ' ') - 1)
+END
+
+ALTER TABLE Employees
+ADD LastModifiedDate DATETIME,
+    LastModifiedBy NVARCHAR(50);
+
+CREATE TRIGGER trg_UpdateLastModifiedDate
+ON Employees
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Employees
+    SET LastModifiedDate = GETDATE()
+    FROM Employees E
+    INNER JOIN Inserted I ON E.EmployeeID = I.EmployeeID;
+END
+
+CREATE TRIGGER trg_UpdateLastModifiedBy
+ON Employees
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Employees
+    SET LastModifiedBy = SUSER_SNAME()
+    FROM Employees E
+    INNER JOIN Inserted I ON E.EmployeeID = I.EmployeeID;
+END
